@@ -1,0 +1,51 @@
+# .github/workflows/publish.yml
+
+name: Publish Python Package to PyPI with uv
+
+# Trigger only when a tag starting with 'v' followed by digits/dots is pushed
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # Matches vX.Y.Z semantic version tags
+
+# Grant permissions for the action to mint OIDC tokens for PyPI
+permissions:
+  id-token: write # Required for trusted publishing
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    # Define the environment required by PyPI's trusted publishing
+    environment:
+      name: pypi # Must match the environment name in PyPI settings if you used one
+      url: https://pypi.org/p/yacrawler # Link shown in GitHub deployments tab
+
+    steps:
+    # 1. Check out the repository code
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    # 2. Set up Python (only need one version for building/publishing)
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11" # Or your preferred Python version for building
+
+    # 3. Install uv
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # 4. Add uv to PATH for subsequent steps
+    - name: Add uv to PATH
+      run: echo "$HOME/.uv/bin" >> $GITHUB_PATH
+
+    # 5. Build the package (sdist and wheel) using uv
+    - name: Build package
+      run: uv build
+
+    # 6. Publish package to PyPI using the official PyPA action
+    #    This action handles OIDC authentication automatically via permissions
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # No API token needed here due to trusted publishing (OIDC)
