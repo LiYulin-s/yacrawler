@@ -36,7 +36,7 @@ Then, you can start the crawling process by calling the `run` method:
 python -m yacrawler YOUR_FILE.app
 ```
 
-![Screenshot](https://github.com/yurin/yaCrawler/blob/main/screenshot.png)
+![Screenshot](https://github.com/LiYulin-s/yacrawler/blob/main/screenshot.png)
 
 ## Features
 
