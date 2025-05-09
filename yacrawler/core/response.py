@@ -1,5 +1,5 @@
 from typing import Dict
-from request import Request
+from .request import Request
 
 
 class Response:
