@@ -2,14 +2,10 @@ from typing import Dict, Optional, Any
 
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll  # Use containers for layout
-from textual.reactive import Reactive  # For reactive state if needed
 from textual.widgets import Header, Footer, Tree, RichLog  # Use RichLog for logs
 
-from yacrawler.core import AsyncRequestAdapter, Pipeline, DiscovererAdapter, UrlWrapper, UpdateTreeNodeMessage
-
-from yacrawler.utilities.aioadapter import AioRequest
-from yacrawler.utilities.discoverers import SimpleRegexDiscoverer
-from yacrawler.utilities.processors import parse_to_dict, write_dict_to_file
+from yacrawler.core import AsyncRequestAdapter, Pipeline, DiscovererAdapter, UrlWrapper
+from yacrawler.tui.ui_logger import UILogger, UpdateTreeNodeMessage
 
 
 class CrawlerApp(App[None]):
@@ -53,13 +49,14 @@ class CrawlerApp(App[None]):
 
     BINDINGS = [
         ("q", "quit", "Quit"),
+        ("s", "stop", "Stop"),
     ]
 
     def __init__(self, start_url: str, max_depth: int, max_workers: int, request_adapter: AsyncRequestAdapter,
                  discoverer_adapter: DiscovererAdapter, pipeline: Pipeline):
         super().__init__()
         self.main_worker = None
-        self.title = Reactive("Async Crawler Progress")
+        self.title = "Async Crawler Progress"
         self.start_url = start_url
         self.max_depth = max_depth
         self.max_workers = max_workers
@@ -88,7 +85,7 @@ class CrawlerApp(App[None]):
             request_adapter=self.request_adapter,
             discoverer_adapter=self.discoverer_adapter,
             pipeline=self.pipeline,
-            textual_app=self,  # Pass reference to this Textual app
+            log_adapter=UILogger(self),
             initial_max_depth=self.max_depth,
             max_workers=self.max_workers
         )
@@ -146,28 +143,8 @@ class CrawlerApp(App[None]):
         """Called in response to key binding."""
         self.exit()  # Exit the Textual app
 
-
-# --- Main Execution ---
-
-if __name__ == "__main__":
-    # Define crawler parameters
-    START_URL = "https://blog.yurin.top"
-    MAX_DEPTH = 1
-    MAX_WORKERS = 10
-
-    # --- Pipeline Processors ---
-
-    pipeline = Pipeline(
-        processors=[
-            parse_to_dict,
-            write_dict_to_file,
-        ]
-    )
-
-    request_adapter = AioRequest()
-    discoverer_adapter = SimpleRegexDiscoverer()
-
-    # Run the Textual application
-    app = CrawlerApp(start_url=START_URL, max_depth=MAX_DEPTH, max_workers=MAX_WORKERS, request_adapter=request_adapter,
-                     discoverer_adapter=discoverer_adapter, pipeline=pipeline)
-    app.run()
+    def action_stop(self) -> None:
+        """Called in response to key binding."""
+        log = self.query_one(RichLog)
+        log.write("[red]Stopping crawler...[/]")
+        self.main_worker.cancel()  # Cancel the main worker

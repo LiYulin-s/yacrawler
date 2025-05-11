@@ -1,6 +1,6 @@
-import asyncio
 # from types import coroutine # Not used
 from typing import Awaitable, Callable, Any, List, Type
+
 
 class PipelineException(Exception):
     """
@@ -8,11 +8,13 @@ class PipelineException(Exception):
     """
     pass
 
+
 class Processor:
     """
     Represents a data processing stage.
     It wraps a callable processor function and includes type checking.
     """
+
     def __init__(self, processor_callable: Callable[[Any], Any], input_type: Type = Any, output_type: Type = Any):
         """
         Initializes a Processor.
@@ -99,6 +101,7 @@ class Processor:
                 f"input_type={self._input_type.__name__} "
                 f"output_type={self._output_type.__name__}>")
 
+
 class Pipeline:
     """
     Represents a data processing pipeline.
@@ -119,8 +122,8 @@ class Pipeline:
                     raise ValueError("All items in the initial processors list must be Processor instances.")
                 self._processors.append(p)
 
-
-    def add_processor(self, processor_callable: Callable[[Any], Any], input_type: Type = Any, output_type: Type = Any) -> None:
+    def add_processor(self, processor_callable: Callable[[Any], Any], input_type: Type = Any,
+                      output_type: Type = Any) -> None:
         """
         Adds a new processing stage to the pipeline.
 
@@ -158,7 +161,7 @@ class Pipeline:
                 # Handle awaitables if a processor is async
                 if isinstance(processed_item, Awaitable):
                     processed_item = await processed_item
-                
+
                 # Ensure processors don't return None, as it can break the chain
                 if processed_item is None:
                     raise PipelineException(
@@ -173,4 +176,3 @@ class Pipeline:
                 raise PipelineException(f"Error processing item with {processor_instance!r}: {e}")
 
         return processed_item
-

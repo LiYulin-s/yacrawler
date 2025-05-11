@@ -13,7 +13,7 @@ class AioRequest(AsyncRequestAdapter):
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             if self.engine:
-                 self.engine.logger(f"Fetching {request.url} with depth {request.depth}", style="dim")
+                 self.engine.log_adapter.log(f"Fetching {request.url} with depth {request.depth}", level="INFO")
             else:
                  print(f"Fetching {request.url} with depth {request.depth}")
 
@@ -24,7 +24,7 @@ class AioRequest(AsyncRequestAdapter):
                     return Response(request=request, body=body, status_code=response.status, headers=headers)
             except aiohttp.ClientError as e:
                  if self.engine:
-                     self.engine.logger(f"Aiohttp error fetching {request.url}: {e}", style="red")
+                     self.engine.log_adapter.log(f"Aiohttp error fetching {request.url}: {e}", level="ERROR")
                  else:
                      print(f"Aiohttp error fetching {request.url}: {e}")
                  raise

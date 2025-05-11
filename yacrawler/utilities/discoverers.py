@@ -18,7 +18,7 @@ class SimpleRegexDiscoverer(DiscovererAdapter):
                  except Exception:
                      html_content = response.body.decode(errors="ignore")
                      if self.engine:
-                          self.engine.logger(f"Could not decode content from {response.request.url} with utf-8 or latin-1, ignoring errors.", style="yellow")
+                          self.engine.log_adapter.log(f"Could not decode content from {response.request.url} with utf-8 or latin-1, ignoring errors.", level="WARNING")
                      else:
                           print(f"Could not decode content from {response.request.url} with utf-8 or latin-1, ignoring errors.")
 
@@ -33,7 +33,7 @@ class SimpleRegexDiscoverer(DiscovererAdapter):
             return valid_urls
         except Exception as e:
             if self.engine:
-                self.engine.logger(f"Error during discovery for {response.request.url}: {e}", style="red")
+                self.engine.log_adapter.log(f"Error during discovery for {response.request.url}: {e}", level="ERROR")
             else:
                 print(f"Error during discovery for {response.request.url}: {e}")
             return []

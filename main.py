@@ -10,6 +10,7 @@ pipeline = Pipeline(
         write_dict_to_file,
     ]
 )
-app = CrawlerApp(start_url="https://blog.yurin.top", max_depth=3, max_workers=10, request_adapter=AioRequest(),
+app = CrawlerApp(start_url="https://blog.yurin.top", max_depth=2, max_workers=100, request_adapter=AioRequest(),
                  discoverer_adapter=SimpleRegexDiscoverer(), pipeline=pipeline)
 
+app.run()

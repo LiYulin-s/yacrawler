@@ -9,7 +9,6 @@ dependencies = [
     "aiohttp>=3.11.18",
     "asyncio>=3.4.3",
     "requests>=2.32.3",
-    "rich>=14.0.0",
     "textual>=3.2.0",
-    "typer[all]>=0.15.3",
+    "typer>=0.15.3",
 ]
