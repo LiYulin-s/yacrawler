@@ -1,8 +1,9 @@
 from typing import Dict, Optional, Any
 
 from textual.app import App, ComposeResult
-from textual.containers import VerticalScroll  # Use containers for layout
-from textual.widgets import Header, Footer, Tree, RichLog  # Use RichLog for logs
+from textual.containers import VerticalScroll, Container  # Use containers for layout
+from textual.reactive import reactive, var
+from textual.widgets import Header, Footer, Tree, RichLog, Static  # Use RichLog for logs
 
 from yacrawler.core import AsyncRequestAdapter, Pipeline, DiscovererAdapter, UrlWrapper
 from yacrawler.tui.ui_logger import UILogger, UpdateTreeNodeMessage
@@ -10,52 +11,79 @@ from yacrawler.tui.ui_logger import UILogger, UpdateTreeNodeMessage
 
 class CrawlerApp(App[None]):
     """A Textual app to display the crawler progress."""
-
     CSS = """
-    Screen {
-        layout: grid;
-        grid-size: 2;
-        grid-columns: 1fr 2fr; /* Log on left (1 part), Tree on right (2 parts) */
-        grid-rows: 1fr;
-    }
+        Screen {
+            layout: grid;
+            grid-size: 2;
+            grid-columns: 1fr 2fr; /* Log on left (1 part), Tree on right (2 parts) */
+            grid-rows: auto 1fr auto; /* Header, Main Content, Footer */
+        }
 
-    Header {
-        column-span: 2; /* Header spans both columns */
-    }
+        Header {
+            column-span: 2; /* Header spans both columns */
+        }
 
-    #log-view {
-        height: 100%; /* Fill the grid cell vertically */
-        border: heavy blue;
-        column-span: 1; /* Explicitly set column span */
-        row-span: 1;    /* Explicitly set row span */
-    }
-     #log-view RichLog {
-         /* Optional: Style the RichLog content */
-         padding: 0 1; /* Add some horizontal padding */
-     }
+        #status-bar {
+            column-span: 2; /* Status bar spans both columns */
+            background: #333; /* Dark background for status bar */
+            color: #eee; /* Light text color */
+            padding: 0 2; /* Horizontal padding */
+            text-align: center; /* Center the text */
+            height: 1; /* Fixed height */
+        }
+
+        #log-view-container {
+            border: heavy blue;
+            column-span: 1;
+            row-span: 1;
+            padding: 1; /* Add padding inside the container */
+        }
+
+        #log-view RichLog {
+             /* Optional: Style the RichLog content */
+             padding: 0; /* Remove default RichLog padding if container has padding */
+         }
 
 
-    #tree-view {
-        height: 100%; /* Fill the grid cell vertically */
-        border: heavy green;
-        column-span: 1; /* Explicitly set column span */
-        row-span: 1;    /* Explicitly set row span */
-    }
+        #tree-view-container {
+            border: heavy green;
+            column-span: 1;
+            row-span: 1;
+            padding: 1; /* Add padding inside the container */
+        }
 
-    Footer {
-        column-span: 2; /* Footer spans both columns */
-    }
-    """
+        Footer {
+            column-span: 2; /* Footer spans both columns */
+        }
+        """
 
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("s", "stop", "Stop"),
     ]
 
+    total_urls = var(0)
+    finished_urls = var(0)
+    error_urls = var(0)
+    title_str = reactive("")
+
+    def watch_total_urls(self, value: int) -> None:
+        self.update_static()
+
+    def watch_finished_urls(self, value: int) -> None:
+        self.update_static()
+
+    def watch_error_urls(self, value: int) -> None:
+        self.update_static()
+
+    def update_static(self):
+        self.query_one(Static).update(f"total: {self.total_urls} [green]finished:[/] [bold green]{self.finished_urls}[/] [red]error:[/] [bold red]{self.error_urls}[/]")
+
     def __init__(self, start_url: str, max_depth: int, max_workers: int, request_adapter: AsyncRequestAdapter,
                  discoverer_adapter: DiscovererAdapter, pipeline: Pipeline):
         super().__init__()
         self.main_worker = None
+
         self.title = "Async Crawler Progress"
         self.start_url = start_url
         self.max_depth = max_depth
@@ -70,12 +98,14 @@ class CrawlerApp(App[None]):
     def compose(self) -> ComposeResult:
         """Compose our UI."""
         yield Header()
-        # Use VerticalScroll and HorizontalScroll for panels within the grid cells
-        with VerticalScroll(id="log-view"):
-            yield RichLog(highlight=True, markup=True)  # Textual widget for logs
-        with VerticalScroll(id="tree-view"):
-            # Initialize the tree with a root label
-            yield Tree("Crawler Progress")
+        # Add a Static widget for the status bar below the header
+        yield Static("Starting crawler...", id="status-bar")
+        # Use Containers to hold the scrollable views for better layout control
+        with Container(id="log-view-container"):
+             yield VerticalScroll(RichLog(highlight=True, markup=True, id="log-view"))
+        with Container(id="tree-view-container"):
+             # Initialize the tree with a root label
+             yield VerticalScroll(Tree("Crawler Progress", id="tree-view"))
         yield Footer()
 
     async def on_mount(self) -> None:

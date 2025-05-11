@@ -30,7 +30,7 @@ class UILogger(LoggerAdapter):
         timestamp = datetime.now().strftime("[%X]")
         match level:
             case "INFO":
-                style_str = "white"
+                style_str = "cyan"
             case "WARNING":
                 style_str = "yellow"
             case "ERROR":
@@ -39,12 +39,13 @@ class UILogger(LoggerAdapter):
                 style_str = "red bold"
             case _:
                 style_str = "white"
-        self.console_logger.write(f"[{style_str}]{timestamp} {message} [/]")
+        self.console_logger.write(f"{timestamp}[{style_str}][{level}][/] {message}")
 
     def update_node(self, url: str, label: str, status: str, parent_url: str):
         match status:
             case "PENDING":
                 style_str = "white"
+                self.app.total_urls += 1
             case "VISITING":
                 style_str = "yellow"
             case "VISITED":
@@ -53,8 +54,10 @@ class UILogger(LoggerAdapter):
                 style_str = "blue"
             case "PROCESSED":
                 style_str = "cyan"
+                self.app.finished_urls += 1
             case "ERROR":
                 style_str = "red"
+                self.app.error_urls += 1
             case "SKIPPED":
                 style_str = "dim"
             case _:

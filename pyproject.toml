@@ -1,13 +1,34 @@
 [project]
 name = "yacrawler"
-version = "0.1.1"
+version = "0.1.2"
 description = "Yet Another Internet Carwler"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "asyncio>=3.4.3",
+]
+
+[project.optional-dependencies]
+tui = [
+    "textual>=3.2.0",
+]
+
+cli = [
+    "typer>=0.15.3",
+]
+
+untilities = [
+    "aiofiles>=24.1.0",
+    "aiohttp>=3.11.18",
+]
+
+all = [
     "aiofiles>=24.1.0",
     "aiohttp>=3.11.18",
     "asyncio>=3.4.3",
     "textual>=3.2.0",
     "typer>=0.15.3",
 ]
+
+[tool.uv]
+default-groups = "all"
