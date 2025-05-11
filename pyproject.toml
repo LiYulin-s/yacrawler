@@ -1,14 +1,13 @@
 [project]
 name = "yacrawler"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "Yet Another Internet Carwler"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "aiofiles>=24.1.0",
     "aiohttp>=3.11.18",
     "asyncio>=3.4.3",
-    "requests>=2.32.3",
     "textual>=3.2.0",
     "typer>=0.15.3",
 ]
