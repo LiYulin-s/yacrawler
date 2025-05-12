@@ -5,11 +5,11 @@ from textual.containers import VerticalScroll, Container  # Use containers for l
 from textual.reactive import reactive, var
 from textual.widgets import Header, Footer, Tree, RichLog, Static  # Use RichLog for logs
 
-from yacrawler.core import AsyncRequestAdapter, Pipeline, DiscovererAdapter, UrlWrapper
-from yacrawler.tui.ui_logger import UILogger, UpdateTreeNodeMessage
+from yacrawler.core import AsyncRequestAdapter, Pipeline, DiscovererAdapter
+from yacrawler.tui.tui_logger import UILogger, UpdateTreeNodeMessage
 
 
-class CrawlerApp(App[None]):
+class CrawlerTuiApp(App[None]):
     """A Textual app to display the crawler progress."""
     CSS = """
         Screen {
@@ -67,25 +67,25 @@ class CrawlerApp(App[None]):
     error_urls = var(0)
     title_str = reactive("")
 
-    def watch_total_urls(self, value: int) -> None:
+    def watch_total_urls(self) -> None:
         self.update_static()
 
-    def watch_finished_urls(self, value: int) -> None:
+    def watch_finished_urls(self) -> None:
         self.update_static()
 
-    def watch_error_urls(self, value: int) -> None:
+    def watch_error_urls(self) -> None:
         self.update_static()
 
     def update_static(self):
         self.query_one(Static).update(f"total: {self.total_urls} [green]finished:[/] [bold green]{self.finished_urls}[/] [red]error:[/] [bold red]{self.error_urls}[/]")
 
-    def __init__(self, start_url: str, max_depth: int, max_workers: int, request_adapter: AsyncRequestAdapter,
+    def __init__(self, start_urls: list[str], max_depth: int, max_workers: int, request_adapter: AsyncRequestAdapter,
                  discoverer_adapter: DiscovererAdapter, pipeline: Pipeline):
         super().__init__()
         self.main_worker = None
 
-        self.title = "Async Crawler Progress"
-        self.start_url = start_url
+        self.title = "YACrawler Progress"
+        self.start_urls = start_urls
         self.max_depth = max_depth
         self.max_workers = max_workers
         self.engine: Optional["Engine"] = None
@@ -93,6 +93,7 @@ class CrawlerApp(App[None]):
 
         self.request_adapter = request_adapter
         self.discoverer_adapter = discoverer_adapter
+        self.logger_adapter = None
         self.pipeline = pipeline
 
     def compose(self) -> ComposeResult:
@@ -111,11 +112,12 @@ class CrawlerApp(App[None]):
     async def on_mount(self) -> None:
         """Called when the app is mounted."""
         from yacrawler.core import Engine
+        self.logger_adapter = UILogger(self)
         self.engine = Engine(
             request_adapter=self.request_adapter,
             discoverer_adapter=self.discoverer_adapter,
             pipeline=self.pipeline,
-            log_adapter=UILogger(self),
+            log_adapter=self.logger_adapter,
             initial_max_depth=self.max_depth,
             max_workers=self.max_workers
         )
@@ -125,8 +127,7 @@ class CrawlerApp(App[None]):
         self.discoverer_adapter.set_engine(self.engine)
 
         # Add the initial URL to the engine's queue
-        initial_wrapper = UrlWrapper(self.start_url, 0, parent_url=None)
-        self.engine.to_visit.append(initial_wrapper)
+        self.engine.set_start_urls(self.start_urls)
 
         # Get the tree widget and expand the root node on mount
         tree_widget = self.query_one(Tree)
@@ -159,8 +160,7 @@ class CrawlerApp(App[None]):
                     parent_node.expand()  # Expand parent to show new child
                 else:
                     # Should not happen if logic is correct, but handle defensively
-                    self.query_one(RichLog).write(
-                        f"[yellow]Warning: Parent node not found for {url} (parent: {parent_url})[/]")
+                    self.logger_adapter.log(f"Orphan node: {url} (parent: {parent_url})", "WARNING")
                     # Optionally add as a root child if parent not found
                     node = tree_widget.root.add(f"[yellow]Orphan: {label}[/]")
                     self.tree_nodes[url] = node
@@ -175,6 +175,5 @@ class CrawlerApp(App[None]):
 
     def action_stop(self) -> None:
         """Called in response to key binding."""
-        log = self.query_one(RichLog)
-        log.write("[red]Stopping crawler...[/]")
+        self.logger_adapter.log("Stopping crawler...", "INFO")
         self.main_worker.cancel()  # Cancel the main worker
