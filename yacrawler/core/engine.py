@@ -169,3 +169,8 @@ class Engine:
             await asyncio.gather(*self.active_tasks, return_exceptions=True)
 
         self.log_adapter.log("Crawler finished.", level="WARNING")
+
+    def set_start_urls(self, urls: list[str]):
+        self.to_visit = collections.deque([UrlWrapper(url, 0) for url in urls])
+        self.seen_urls = set()
+        self.log_adapter.log(f"Starting crawl with {len(urls)} URLs", level="WARNING")

@@ -1,5 +1,5 @@
-from .ui import CrawlerApp
+from .tui import CrawlerTuiApp
 
 __all__ = [
-    "CrawlerApp",
+    "CrawlerTuiApp",
 ]

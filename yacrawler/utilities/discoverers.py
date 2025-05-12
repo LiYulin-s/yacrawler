@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Optional, Callable
 
 from yacrawler.core import DiscovererAdapter, Response, Engine
 
@@ -43,3 +43,13 @@ class SimpleRegexDiscoverer(DiscovererAdapter):
 
     def set_engine(self, engine: Engine):
         self.engine = engine
+
+class FilteredRegexDiscoverer(SimpleRegexDiscoverer):
+    def __init__(self, predict: Callable[[str], bool]):
+        super().__init__()
+        self.predict = predict
+
+    def discover(self, response: Response) -> list[str]:
+        urls = super().discover(response)
+        filtered_urls = [url for url in urls if self.predict(url)]
+        return filtered_urls
