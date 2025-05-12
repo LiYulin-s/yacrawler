@@ -1,5 +1,10 @@
 # YACRAWLER - Yet Another Internet Crawler
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LiYulin-s/yacrawler)
+[![Publish Python Package to PyPI with uv](https://github.com/LiYulin-s/yacrawler/actions/workflows/publish.yml/badge.svg)](https://github.com/LiYulin-s/yacrawler/actions/workflows/publish.yml)
+[![PyPI](https://img.shields.io/pypi/v/yacrawler)](https://pypi.org/project/yacrawler/)
+[![wakatime](https://wakatime.com/badge/user/06081d4f-14d6-4660-b1eb-445d8791e389/project/93a72be9-294e-4a8b-a561-e1b08cc2c549.svg)](https://wakatime.com/badge/user/06081d4f-14d6-4660-b1eb-445d8791e389/project/93a72be9-294e-4a8b-a561-e1b08cc2c549)
+
 ## Introduction
 
 YACRAWLER is a simple web crawler written in Python. It is designed to be easy to use and flexible, allowing users to customize the crawling behavior and output format.
@@ -32,11 +37,19 @@ app = CrawlerTuiApp(start_url="https://blog.yurin.top", max_depth=3, max_workers
 
 Then, you can start the crawling process by calling the `run` method:
 
-```sh
-python -m yacrawler YOUR_FILE.app
+```shell
+python -m yacrawler run YOUR_FILE.app
 ```
 
-![Screenshot](https://github.com/LiYulin-s/yacrawler/blob/main/screenshot.png)
+or run a simple crawling process by calling the `crawl` method 😊:
+
+```shell
+python -m yacrawler crawl -d 3 -w 10 -u https://blog.yurin.top
+```
+
+![Screenshot For CLI](https://github.com/LiYulin-s/yacrawler/blob/main/docs/images/screenshot-cli.png)
+
+![Screenshot For TUI](https://github.com/LiYulin-s/yacrawler/blob/main/docs/images/screenshot-tui.png)
 
 ## Features
 
@@ -62,10 +75,12 @@ YACRAWLER is licensed under the MIT License. See the LICENSE file for more infor
 
 YACRAWLER is built using the following libraries:
 
-- `aiohttp`: A library for making HTTP requests asynchronously.
 - `asyncio`: A library for managing asynchronous tasks.
-- `Textual`: A library for building rich text-based user interfaces in Python.
+- `typer`: A library for building command-line interfaces in Python.
+- `rich`: A library for formatting and printing text in a terminal-friendly way.
+- `textual`: A library for building rich text-based user interfaces in Python.
 - `aiofiles`: A library for handling file I/O operations asynchronously.
+- `aiohttp`: A library for making HTTP requests asynchronously.
 
 ## Contributing
 
